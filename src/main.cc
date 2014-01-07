@@ -23,6 +23,9 @@ int main( int argc, char** argv )
     //Read in paramterfile
     FileReader read;    
     read.registerIntParameter("dictionary_length");
+    read.registerIntParameter("kmeans_attempts");
+    read.registerIntParameter("kmeans_iter");
+    read.registerRealParameter("kmeans_eps");
     read.registerStringParameter("image_path_1");
     read.registerStringParameter("dictionary_path");
     CHECK_MSG( read.readFile(parameterfile), "Could not read config file");

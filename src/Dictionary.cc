@@ -9,6 +9,11 @@
 void Dictionary::generate(){
    
   cv::Mat samples;
+  cv::Mat samples2;
+  cv::Mat labels;
+  cv::Mat centers;
+  cv::TermCriteria criteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, parameters.getIntParameter("kmeans_iter"), parameters.getRealParameter("kmeans_eps"));
+  
   for(int i = 1; i< 2; ++i){
     
     cv::Mat image;
@@ -28,18 +33,22 @@ void Dictionary::generate(){
     
     
     for(int x = 0; x < image.size().width - 7; x = x + 8){
-      for( int y = 0; y < image.size().height - 7; y = y + 8){/*
-	std::cout << y/8 + (x/8)*(int(image.size().height - 7)/8 + 1) << " " << std::endl;*/
-	cv::Mat image2 = image(cv::Range(y,y+8), cv::Range(x,x+8));
-	std::cout << image2 << std::endl;
-	  for(int l = 0; l < 4; ++l){
-	    for( int m = 0; m < 4; ++m){
-	      samples.ptr<float>(y/8 + (x/8)*(int(image.size().height - 7)/8 + 1), l*4 + m) = image2.ptr<float>(l,m);
-	    }
-	  }
+      for( int y = 0; y < image.size().height - 7; y = y + 8){
+	cv::Mat image2(8,8,CV_32F);
+	image2= image(cv::Range(y,y+8), cv::Range(x,x+8)).clone();
+	int sz = image2.cols*image2.rows;
+	samples.push_back((image2.reshape(sz, 1)));
       }
     }
-//     
+    
+    samples.convertTo(samples, CV_32F);
+    
+    cv::kmeans(samples, parameters.getIntParameter("dictionary_length"), labels, criteria, parameters.getIntParameter("kmeans_attempts"), cv::KMEANS_PP_CENTERS, centers);
+    
+    centers.convertTo(centers, CV_8UC1);
+    std::cout << centers << std::endl;
+    std::cout << centers.rows << ", " << centers.cols << std::endl;
+    //std::cout << samples << std::endl;
 //     cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );
 //     cv::imshow( "Display window", image);
 //     cv::waitKey(0);
