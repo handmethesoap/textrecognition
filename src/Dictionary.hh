@@ -28,8 +28,10 @@ public:
 private:
   
   void generate();
+  void printfiles();
   const FileReader & parameters;
   bool type;
+  cv::Mat centers;
   
   
 };
