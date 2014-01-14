@@ -8,8 +8,14 @@
 
 void Image::generateDictionaries(void){
   
-  const cv::Mat & subimage = image(cv::Range(0,31), cv::Range(0,31));
-  dict = new Dictionary(parameters, subimage, isText(0,0));
+  dict = new Dictionary(parameters);
+  dict->generate();
+}
+
+void Image::readDictionaries(void){
+  
+  dict = new Dictionary(parameters);
+  dict->read();
 }
 
 void Image::printIsText(void){

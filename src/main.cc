@@ -10,8 +10,9 @@
 int main( int argc, char** argv )
 {
     //check correct command line inputs and store parameter file name
-    CHECK_MSG(argc == 2,"The command line requires a single input of the parameter file name");
+    CHECK_MSG(argc == 3,"The command line requires an input of the parameter file name and a boolean input specifying whether to generate a new dictionary or not");
     std::string parameterfile = argv[1];
+    std::string generatedictionary = argv[2];
     
     
     //Start timer
@@ -28,12 +29,25 @@ int main( int argc, char** argv )
     read.registerRealParameter("kmeans_eps");
     read.registerStringParameter("image_path_1");
     read.registerStringParameter("dictionary_path");
+    read.registerStringParameter("dictionary_save_path");
+    read.registerIntParameter("read_dictionary");
     CHECK_MSG( read.readFile(parameterfile), "Could not read config file");
     read.printParameters();    
     
+    //depending on command line parameter generate or read dictionary
+    if(generatedictionary == "1"){
+      Image im(read, "apanar_06.08.2002/Img_1305.jpg");
+      im.generateDictionaries();
+    }
+    else if(generatedictionary == "0"){
+      Image im(read, "apanar_06.08.2002/Img_1305.jpg");
+      im.readDictionaries();
+    }
+    else{
+      std::cout << "command line input for generating dictionary must be a boolean value" << std::endl;
+    }
     Image im(read, "apanar_06.08.2002/Img_1305.jpg");
-    im.generateDictionaries();
-    
+    im.readDictionaries();
     //dict.generate();
     
     //Output operation time
