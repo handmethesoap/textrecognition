@@ -1,7 +1,7 @@
 
 #include "FileReader.hh"
 #include "Dictionary.hh"
-#include "Image.hh"
+#include "TextRecognition.hh"
 #include <iostream>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -35,19 +35,21 @@ int main( int argc, char** argv )
     read.printParameters();    
     
     //depending on command line parameter generate or read dictionary
+    Dictionary dict(read);
+    
     if(generatedictionary == "1"){
-      Image im(read, "apanar_06.08.2002/Img_1305.jpg");
-      im.generateDictionaries();
+      dict.generate();
     }
     else if(generatedictionary == "0"){
-      Image im(read, "apanar_06.08.2002/Img_1305.jpg");
-      im.readDictionaries();
+      dict.read();
     }
     else{
       std::cout << "command line input for generating dictionary must be a boolean value" << std::endl;
     }
-    Image im(read, "apanar_06.08.2002/Img_1305.jpg");
-    im.readDictionaries();
+    
+    TextRecognition recogniser(read, dict);
+    recogniser.train();
+
     //dict.generate();
     
     //Output operation time

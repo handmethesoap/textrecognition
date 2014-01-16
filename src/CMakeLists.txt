@@ -3,6 +3,6 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 include_directories( . )
 
-add_executable( textrecognition FileReader.cc Debug.cc Dictionary.cc Array.cc Image.cc main.cc )
+add_executable( textrecognition FileReader.cc Debug.cc Dictionary.cc Array.cc TextRecognition.cc main.cc )
 
 target_link_libraries( textrecognition ${OpenCV_LIBS} )
