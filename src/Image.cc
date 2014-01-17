@@ -6,18 +6,6 @@
 #include <fstream>
 #include <stdlib.h>
 
-void Image::generateDictionaries(void){
-  
-  dict = new Dictionary(parameters);
-  dict->generate();
-}
-
-void Image::readDictionaries(void){
-  
-  dict = new Dictionary(parameters);
-  dict->read();
-}
-
 void Image::printIsText(void){
   for(int i = 0; i < image.size().width - 31; ++i){
     for(int j = 0; j < image.size().height -31; ++j){

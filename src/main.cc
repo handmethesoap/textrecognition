@@ -27,7 +27,7 @@ int main( int argc, char** argv )
     read.registerIntParameter("kmeans_attempts");
     read.registerIntParameter("kmeans_iter");
     read.registerRealParameter("kmeans_eps");
-    read.registerStringParameter("image_path_1");
+    read.registerStringParameter("recognition_train_path");
     read.registerStringParameter("dictionary_path");
     read.registerStringParameter("dictionary_save_path");
     read.registerIntParameter("read_dictionary");

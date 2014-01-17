@@ -24,11 +24,12 @@ public:
   
   void generate();
   void read();
+  cv::Mat centers;
 private:
   
   void printfiles();
   const FileReader & parameters;
-  cv::Mat centers;
+  
   
   
 };

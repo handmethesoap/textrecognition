@@ -47,8 +47,6 @@ public:
     }
   }
   
-  void generateDictionaries(void);
-  void readDictionaries(void);
   void printIsText(void);
   
 private:
