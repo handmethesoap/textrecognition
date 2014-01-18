@@ -26,7 +26,7 @@ void Dictionary::generate(){
     std::stringstream tt;
     getline(infile,line);
     tt<<line;
-    while( tt>>param && numimages < 100 ){
+    while( tt>>param && numimages < 6000 ){
       if(param == "<image" ){
 	tt>>param;
 	file = param.substr(param.find('"')+1);
@@ -87,8 +87,8 @@ void Dictionary::generate(){
  	    
 	    
 	    //add processed subimage to sample matrix to be passed to kmeans algorithim
-	    int sz = subimage.cols*subimage.rows;
-	    samples.push_back((subimage.reshape(sz, 1)));
+	    //int sz = subimage.cols*subimage.rows;
+	    samples.push_back((subimage.reshape(0, 1)));
 	  }
 	}
 	
@@ -133,7 +133,7 @@ void Dictionary::printfiles(){
 
 void Dictionary::read(){
   
-  int sz = 64;
+  //int sz = 64;
   
   for(int i = 0; i < parameters.getIntParameter("dictionary_length"); ++ i){
     cv::Mat image;
@@ -148,10 +148,10 @@ void Dictionary::read(){
       std::cout << "could not read image " << name << std::endl;
     }
     
-    centers.push_back((image.reshape(sz, 1)));
+    centers.push_back((image.reshape(0, 1)));
   }
   centers.convertTo(centers, CV_8UC1);
-  std::cout << centers << std::endl;
+  //std::cout << centers << std::endl;
 }
   
 

@@ -1,8 +1,12 @@
-dictionary_length 2
+dictionary_length 32
 kmeans_attempts 5
 kmeans_iter 1000
 kmeans_eps 0.001
 dictionary_path ../../images/OCR/Train/
 dictionary_save_path dictionaryimages/
-read_dictionary 1
+read_dictionary 0
 recognition_train_path ../../images/Reading-Location/SceneTrialTrain/
+recognition_test_path ../../images/Reading-Location/SceneTrialTest/
+numtextsamples 30000
+numnotextsamples 30000
+traindata traindata.txt

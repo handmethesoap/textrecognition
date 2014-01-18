@@ -4,6 +4,7 @@
 #include "FileReader.hh"
 #include "Dictionary.hh"
 #include <vector>
+#include <opencv2/ml/ml.hpp>
 
 struct Rectangle{
   
@@ -28,6 +29,8 @@ public:
   }
 
   void train(void);
+  void load(void);
+  void test(void);
 
 
 
@@ -40,9 +43,15 @@ private:
 
   void printIsText(cv::Mat image, std::vector<cv::Rect*> textboxes);
   bool isText( int x, int y, std::vector<cv::Rect*> textboxes);
+  void reduceFeatures( cv::Mat & featurerepresentation, cv::Mat & reducedfeaturerepresentation );
+  void normalise( cv::Mat & matrix );
+  void printTrainData(cv::Mat traindata, cv::Mat traindatatype);
+  void readTrainData(cv::Mat & traindata, cv::Mat & traindatatype);
+  
   
   const FileReader & parameters;
   const Dictionary & dict;
+  cv::SVM linearSVM;
 
 
 
