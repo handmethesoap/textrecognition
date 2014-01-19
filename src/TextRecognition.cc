@@ -94,7 +94,7 @@ void TextRecognition::train(void){
 	  for(int i = 0; i < image.size().width - 31; i+=32){
 	    for(int j = 0; j < image.size().height -31; j+=32){
 	      
-	      bool datatype = isText(j,i,textboxes);
+	      bool datatype = isText(i,j,textboxes);
 	      
 	      if( (datatype == 1 && numtextsamples < parameters.getIntParameter("numtextsamples")) || (datatype == 0 && numnotextsamples < parameters.getIntParameter("numnotextsamples")) ){
 		
@@ -109,33 +109,8 @@ void TextRecognition::train(void){
 		std::cout << numtextsamples << ", " << numnotextsamples << std::endl;
 	      
 		cv::Mat subimage = image(cv::Range(j,j+32), cv::Range(i,i+32));
-		cv::Mat featurerepresentation;
 		cv::Mat reducedfeaturerepresentation;
-		
-		//extract 8*8 subsubimages
-		for(int k = 0; k < subimage.size().width - 7; ++k){
-		  for( int l = 0; l < subimage.size().height - 7; ++l){
-		    
-		    //extract subsubimages
-		    cv::Mat subsubimage = subimage(cv::Range(l,l+8), cv::Range(k,k+8)).clone();
-		    
-		    //normalise and zca whiten
-		    normalise( subsubimage );
-		    
-		    //compute dot product with dictionary
-		    for( int m = 0; m < parameters.getIntParameter("dictionary_length"); ++m){
-		      featurerepresentation.push_back((subsubimage.reshape(0, 1)).dot(dict.centers.row(m)));
-		    }
-		    
-		  }
-		}
-		
-		featurerepresentation = featurerepresentation.reshape(0,25);  
-		reduceFeatures(featurerepresentation, reducedfeaturerepresentation);
-		
-    // 	    std::cout << featurerepresentation << std::endl;
-    //  	    std::cout << reducedfeaturerepresentation << std::endl;
-		
+		computeFeatureRepresentation(subimage, reducedfeaturerepresentation);
 		traindata.push_back(reducedfeaturerepresentation.reshape(0,1));
 	      }
 	    }
@@ -157,8 +132,6 @@ void TextRecognition::train(void){
   
   cv::Mat testdata;
   cv::Mat testdatalabels;
-  
-  //readTrainData(testdata, testdatalabels);
   
 }
 
@@ -282,20 +255,9 @@ void TextRecognition::printIsText(cv::Mat image, std::vector<cv::Rect*> textboxe
 bool TextRecognition::isText( int x, int y, std::vector<cv::Rect*> textboxes){
   
   int istextsum = 0;
-  //std::cout << "here1.1" << std::endl;
-//   for( int i = x; i < (x + 32) ; ++i ){
-//     for( int j = y; j < (y + 32); ++j ){
-//       for( auto it =  textboxes.begin(); it != textboxes.end(); ++it ){
-// 	if( (i >= (**it).x)  && (i <= ((**it).x + (**it).w)) ){
-// 	  if( (j >= (**it).y) && (j <= ((**it).y + (**it).h))){
-// 	    ++istextsum;
-// 	    break;
-// 	  }
-// 	}
-//       }
-//     }
-//   }
   cv::Rect box(x,y,32, 32);
+  
+  //find area intersection between location and textboxes
   for( auto it =  textboxes.begin(); it != textboxes.end(); ++it ){
     cv::Rect temprect = box & **it;
     istextsum += temprect.area();
@@ -388,8 +350,8 @@ void TextRecognition::test(void){
 	file = param.substr(param.find('>')+1);
 	file = file.erase(file.find('<'));
 	
-	file = "ryoungt_05.08.2002/testtest.JPG";
-	
+	//file = "ryoungt_05.08.2002/testtest.JPG";
+	file = "apanar_06.08.2002/IMG_1261.JPG";
 	std::vector<cv::Rect*> textboxes;
 	int x,y,w,h;
 	std::string value;
@@ -434,53 +396,39 @@ void TextRecognition::test(void){
 	  tt>>param;
 	}
 	
-	cv::Mat image = cv::imread(  parameters.getStringParameter("recognition_test_path") + file , cv::IMREAD_GRAYSCALE );
+	cv::Mat image = cv::imread(  parameters.getStringParameter("recognition_train_path") + file , cv::IMREAD_GRAYSCALE );
 	if(! image.data ){
 	  std::cout << "could not read image " << parameters.getStringParameter("recognition_test_path") + file << std::endl;
 	}
-	
+	cv::Mat textresult = cv::Mat::zeros(image.size(), CV_8UC1);
 	std::cout << "testing with file " << file << std::endl;
 	numimages++;
 	
 	int windowsize = 32;
 	
 	//extract 32*32 subimages
-	for(int i = 0; i <= image.size().width - windowsize; ++i){
-	  for(int j = 0; j <= image.size().height -windowsize; ++j){
+	for(int i = 0; i <= image.size().width - windowsize; i+=5){
+	  for(int j = 0; j <= image.size().height -windowsize; j+=5){
 	    
 	      cv::Mat subimage = image(cv::Range(j,j+windowsize), cv::Range(i,i+windowsize));
-	      cv::Mat featurerepresentation;
 	      cv::Mat reducedfeaturerepresentation;
+	      
 	      cv::Mat scaledsubimage(32,32,CV_8UC1);
-		
 	      cv::resize(subimage, scaledsubimage, scaledsubimage.size());
 	      
-	      //extract 8*8 subsubimages
-	      for(int k = 0; k < scaledsubimage.size().width - 7; ++k){
-		for( int l = 0; l < scaledsubimage.size().height - 7; ++l){
-		  
-		  //extract subsubimages
-		  cv::Mat subsubimage = scaledsubimage(cv::Range(l,l+8), cv::Range(k,k+8)).clone();
-		  
-		  //normalise and zca whiten
-		  normalise( subsubimage );
-		  
-		  //compute dot product with dictionary
-		  for( int m = 0; m < parameters.getIntParameter("dictionary_length"); ++m){
-		    featurerepresentation.push_back((subsubimage.reshape(0, 1)).dot(dict.centers.row(m)));
-		  }
-		  
-		}
-	      }
+	      computeFeatureRepresentation(scaledsubimage, reducedfeaturerepresentation);
 	      
-	      featurerepresentation = featurerepresentation.reshape(0,25);  
-	      reduceFeatures(featurerepresentation, reducedfeaturerepresentation);
-	      
-	      reducedfeaturerepresentation.convertTo(reducedfeaturerepresentation, CV_32F);
-	      
-	      std::cout << linearSVM.predict(reducedfeaturerepresentation.reshape(0,1)) << "; (" << i << ", " << j << ")" << std::endl;
+	      float text = linearSVM.predict(reducedfeaturerepresentation.reshape(0,1), 1);
+// 	      if(text == 1){
+// 		cv::Mat temp = cv::Mat::ones(windowsize, windowsize, CV_8UC1);
+// 		textresult(cv::Range(j,j+windowsize), cv::Range(i,i+windowsize)) = temp*255;
+// 	      }
+	      std::cout << text << "; (" << i << ", " << j << ")" << std::endl;
 	    }
 	  }
+	  cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );
+	  cv::imshow( "Display window", textresult);	  
+	  cv::waitKey(0);
 	}
       }
       
@@ -488,5 +436,30 @@ void TextRecognition::test(void){
     }
   }
 
-
-
+void TextRecognition::computeFeatureRepresentation(cv::Mat & subimage, cv::Mat & reducedfeaturerepresentation ){
+  
+  cv::Mat featurerepresentation;
+  
+  //extract 8*8 subsubimages
+  for(int k = 0; k < subimage.size().width - 7; ++k){
+    for( int l = 0; l < subimage.size().height - 7; ++l){
+      
+      //extract subsubimages
+      cv::Mat subsubimage = subimage(cv::Range(l,l+8), cv::Range(k,k+8)).clone();
+      
+      //normalise and zca whiten
+      normalise( subsubimage );
+      
+      //compute dot product with dictionary
+      for( int m = 0; m < parameters.getIntParameter("dictionary_length"); ++m){
+	featurerepresentation.push_back((subsubimage.reshape(0, 1)).dot(dict.centers.row(m)));
+      }
+      
+    }
+  }
+  
+  featurerepresentation = featurerepresentation.reshape(0,25);  
+  reduceFeatures(featurerepresentation, reducedfeaturerepresentation);
+  
+  reducedfeaturerepresentation.convertTo(reducedfeaturerepresentation, CV_32F);
+}

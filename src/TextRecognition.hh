@@ -47,6 +47,7 @@ private:
   void normalise( cv::Mat & matrix );
   void printTrainData(cv::Mat traindata, cv::Mat traindatatype);
   void readTrainData(cv::Mat & traindata, cv::Mat & traindatatype);
+  void computeFeatureRepresentation(cv::Mat & subimage, cv::Mat & reducedfeaturerepresentation );
   
   
   const FileReader & parameters;
