@@ -96,6 +96,7 @@ void TextRecognition::train(void){
 	      
 	      bool datatype = isText(i,j,textboxes);
 	      
+	      //check if the required number of text and non text samples have been processed
 	      if( (datatype == 1 && numtextsamples < parameters.getIntParameter("numtextsamples")) || (datatype == 0 && numnotextsamples < parameters.getIntParameter("numnotextsamples")) ){
 		
 		traindatatype.push_back(datatype);
@@ -326,115 +327,70 @@ void TextRecognition::readTrainData(cv::Mat & traindata, cv::Mat & traindatatype
 }
 
 void TextRecognition::test(void){
- //open text file containing image file data
-  std::string name = parameters.getStringParameter("recognition_test_path") + "locations.xml";
-  std::ifstream infile(name.c_str());
-  CHECK_MSG(infile.good(),"Error reading '" << name << "'.  Please check file exists and is named correctly");
-  
-  int numimages = 0;
-  
-  //Read image file names
-  while (!infile.eof()){
-    std::string line, param;
-    std::string file;
-    std::stringstream tt;
-    getline(infile,line);
-    tt<<line;
-    while( tt>>param && numimages < 1 ){
-      
-      //get image file name
-      if(param == "<image>" ){
-	getline(infile,line);
-	tt<<line;
-	tt>>param;
-	file = param.substr(param.find('>')+1);
-	file = file.erase(file.find('<'));
 	
-	//file = "ryoungt_05.08.2002/testtest.JPG";
-	file = "apanar_06.08.2002/IMG_1261.JPG";
-	std::vector<cv::Rect*> textboxes;
-	int x,y,w,h;
-	std::string value;
-	
-	//get textbox bounds of image
-	while( param != "</taggedRectangles>" ){
-	
-	  if(param == "<taggedRectangle" ){
+  //read in test image
+  std::cout << "loading test image" << std::endl;
+  cv::Mat image = cv::imread(  parameters.getStringParameter("recognition_test_path") + parameters.getStringParameter("test_file") , cv::IMREAD_GRAYSCALE );
+  if(! image.data ){
+    std::cout << "could not read image " << parameters.getStringParameter("recognition_test_path") + parameters.getStringParameter("test_file") << std::endl;
+  }
+  cv::Mat textresult = cv::Mat::zeros(image.size(), CV_8UC1);
+  std::cout << "testing with file " << parameters.getStringParameter("test_file") << std::endl;
 
-	    while( param[0] != 'x' ){
-	    tt>>param;
-	    }
-	    value = param.substr(param.find('"')+1);
-	    value = value.erase(value.find('"'));
-	    x =  int(atof(value.c_str()));
-	    
-	    while( param[0] != 'y' ){
-	    tt>>param;
-	    }
-	    value = param.substr(param.find('"')+1);
-	    value = value.erase(value.find('"'));
-	    y =  int(atof(value.c_str()));
-	    
-	    while( param[0] != 'w' ){
-	    tt>>param;
-	    }
-	    value = param.substr(param.find('"')+1);
-	    value = value.erase(value.find('"'));
-	    w =  int(atof(value.c_str()));
-	    
-	    while( param[0] != 'h' ){
-	    tt>>param;
-	    }
-	    value = param.substr(param.find('"')+1);
-	    value = value.erase(value.find('"'));
-	    h =  int(atof(value.c_str()));
-	    
-	    textboxes.push_back(new cv::Rect(x,y,w,h));
-	  }
-	  getline(infile,line);
-	  tt<<line;
-	  tt>>param;
-	}
+  //test for text with varying window size
+  for(int windowsize = 6; windowsize<=64; windowsize+=2){
+    std::cout << "searching for text with window size " << windowsize << std::endl;
+    
+    cv::Mat features;
+    cv::Mat results;
+    
+    //extract windowsize*windowsize subimages
+    for(int j = 0; j <= image.size().height - windowsize; j+=10){
+      for(int i = 0; i <= image.size().width - windowsize; i+=10){
 	
-	cv::Mat image = cv::imread(  parameters.getStringParameter("recognition_train_path") + file , cv::IMREAD_GRAYSCALE );
-	if(! image.data ){
-	  std::cout << "could not read image " << parameters.getStringParameter("recognition_test_path") + file << std::endl;
-	}
-	cv::Mat textresult = cv::Mat::zeros(image.size(), CV_8UC1);
-	std::cout << "testing with file " << file << std::endl;
-	numimages++;
-	
-	int windowsize = 32;
-	
-	//extract 32*32 subimages
-	for(int i = 0; i <= image.size().width - windowsize; i+=5){
-	  for(int j = 0; j <= image.size().height -windowsize; j+=5){
-	    
-	      cv::Mat subimage = image(cv::Range(j,j+windowsize), cv::Range(i,i+windowsize));
-	      cv::Mat reducedfeaturerepresentation;
-	      
-	      cv::Mat scaledsubimage(32,32,CV_8UC1);
-	      cv::resize(subimage, scaledsubimage, scaledsubimage.size());
-	      
-	      computeFeatureRepresentation(scaledsubimage, reducedfeaturerepresentation);
-	      
-	      float text = linearSVM.predict(reducedfeaturerepresentation.reshape(0,1), 1);
-// 	      if(text == 1){
-// 		cv::Mat temp = cv::Mat::ones(windowsize, windowsize, CV_8UC1);
-// 		textresult(cv::Range(j,j+windowsize), cv::Range(i,i+windowsize)) = temp*255;
-// 	      }
-	      std::cout << text << "; (" << i << ", " << j << ")" << std::endl;
-	    }
-	  }
-	  cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );
-	  cv::imshow( "Display window", textresult);	  
-	  cv::waitKey(0);
+	  cv::Mat subimage = image(cv::Range(j,j+windowsize), cv::Range(i,i+windowsize)).clone();
+	  cv::Mat reducedfeaturerepresentation;
+	  
+	  cv::Mat scaledsubimage(32,32,CV_8UC1);
+	  cv::resize(subimage, scaledsubimage, scaledsubimage.size());
+	  
+	  computeFeatureRepresentation(scaledsubimage, reducedfeaturerepresentation);
+	  results.push_back(int((-(linearSVM.predict(reducedfeaturerepresentation.reshape(0,1), 1)))*128/2 +128));
 	}
       }
       
-      std::cout << parameters.getStringParameter("recognition_train_path") + file << std::endl;
-    }
+
+      for(int j = 0; j < image.size().height; ++j){
+	  for(int i = 0; i < image.size().width; ++i){
+	    int x1 = i/10;
+	    std::cout << x1 << std::endl;
+	    while((x1*10+windowsize > i)  && (x1 >= 0)){
+	      if(results.at<uchar>(j/10, x1) > textresult.at<uchar>(j,i)){
+		textresult.at<uchar>(j,i) = results.at<uchar>(j/10, x1);
+	      }
+	      --x1;
+	    }
+	    int y1 = j/10;
+	    while((y1*10+windowsize > i) && (y1 >= 0)){
+	      if(results.at<uchar>(y1, i/10) > textresult.at<uchar>(j,i)){
+		textresult.at<uchar>(j,i) = results.at<uchar>(y1, i/10);
+	      }
+	      --y1;
+	    }
+	  }
+	}
+
+      std::cout << results.reshape(0,(image.size().height- windowsize)/10+1) << std::endl;
+      std::cout << "Window Size = " << windowsize << std::endl << std::endl;
+      
   }
+  
+  cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );
+  cv::imshow( "Display window", textresult);
+  cv::waitKey(0);
+  imwrite(parameters.getStringParameter("test_result_file"), textresult);
+
+}
 
 void TextRecognition::computeFeatureRepresentation(cv::Mat & subimage, cv::Mat & reducedfeaturerepresentation ){
   
