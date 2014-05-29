@@ -1,10 +1,10 @@
-dictionary_length 64
+dictionary_length 62
 dictionary_source_images 6000
 kmeans_attempts 5
 kmeans_iter 1000
 kmeans_eps 0.001
 dictionary_path ../../images/OCR/Train/
-dictionary_save_path dictionaryimages64/
+dictionary_save_path ../dictionaryimages64/
 recognition_train_path ../../images/Reading-Location/SceneTrialTrain/
 %recognition_test_path ../../images/Reading-Location/SceneTrialTrain/
 recognition_test_path ../../images/Reading-Location/SceneTrialTest/

@@ -9,6 +9,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <string>
 
 class Dictionary
 {
@@ -24,10 +25,15 @@ public:
   
   void generate();
   void read();
-  cv::Mat centers;
+  void zcawhiten( cv::Mat & samples );
+  cv::Mat1f centers;
+  cv::Mat w, u;
+  
 private:
   
   void printfiles();
+  void getfilenames( std::vector<std::string>& filenames );
+  void getsubimages( cv::Mat& samples, std::string filename );
   const FileReader & parameters;
   
   

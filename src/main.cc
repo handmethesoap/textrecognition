@@ -25,6 +25,7 @@ int main( int argc, char** argv )
     //Read in paramterfile
     FileReader read;    
     read.registerIntParameter("dictionary_length");
+    read.registerIntParameter("dictionary_source_images");
     read.registerIntParameter("kmeans_attempts");
     read.registerIntParameter("kmeans_iter");
     read.registerRealParameter("kmeans_eps");
@@ -42,6 +43,33 @@ int main( int argc, char** argv )
     
     //depending on command line parameter generate or read dictionary
     
+/*    
+    cv::Mat1f matrix;
+    cv::Mat1f vector;
+    
+    for(int i = 1; i < 11; ++i){
+      matrix.push_back(i);
+    }
+    cv::Mat1f matrix2 = matrix.reshape(0,2);
+    
+    for(int j = 1; j < 6; ++j){
+      vector.push_back(j);
+    }
+    
+    cv::Mat1f vector3 = vector.reshape(0,5);
+    
+    std::cout << matrix2 << std::endl;
+    std::cout << vector3 << std::endl;
+    
+    std::cout << matrix.type() << std::endl;
+    std::cout << vector.type() << std::endl;
+    
+    cv::Mat1f test = matrix2*vector3;
+    cv::Mat1f result;
+    result.push_back( test );
+    result.push_back( test );
+    std::cout << result << std::endl;*/
+    
     Dictionary dict(read);
     TextRecognition recogniser(read, dict);
     
@@ -55,6 +83,7 @@ int main( int argc, char** argv )
       std::cout << "command line input for generating dictionary must be a boolean value" << std::endl;
     }
     
+    std::cout << "dictionary created or loaded, proceeding to text recognition" << std::endl;
     
     if(generatetraindata == "1"){
       recogniser.train();

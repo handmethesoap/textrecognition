@@ -43,11 +43,11 @@ private:
 
   void printIsText(cv::Mat image, std::vector<cv::Rect*> textboxes);
   bool isText( int x, int y, std::vector<cv::Rect*> textboxes);
-  void reduceFeatures( cv::Mat & featurerepresentation, cv::Mat & reducedfeaturerepresentation );
-  void normalise( cv::Mat & matrix );
+  void reduceFeatures( cv::Mat1f & featurerepresentation, cv::Mat & reducedfeatures );
+  void normalise( cv::Mat1f & matrix );
   void printTrainData(cv::Mat traindata, cv::Mat traindatatype);
   void readTrainData(cv::Mat & traindata, cv::Mat & traindatatype);
-  void computeFeatureRepresentation(cv::Mat & subimage, cv::Mat & reducedfeaturerepresentation );
+  void computeFeatureRepresentation(cv::Mat1f & subimage, cv::Mat & reducedfeatures );
   
   
   const FileReader & parameters;
