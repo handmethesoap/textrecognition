@@ -26,6 +26,7 @@ int main( int argc, char** argv )
     FileReader read;    
     read.registerIntParameter("dictionary_length");
     read.registerIntParameter("dictionary_source_images");
+    read.registerIntParameter("dictionary_train_images");
     read.registerIntParameter("kmeans_attempts");
     read.registerIntParameter("kmeans_iter");
     read.registerRealParameter("kmeans_eps");
@@ -39,7 +40,9 @@ int main( int argc, char** argv )
     read.registerStringParameter("test_file");
     read.registerStringParameter("test_result_file");
     CHECK_MSG( read.readFile(parameterfile), "Could not read config file");
-    
+    read.registerIntParameter("min_window_size");
+    read.registerIntParameter("max_window_size");
+    read.registerIntParameter("window_step_size");
     
     //depending on command line parameter generate or read dictionary
     

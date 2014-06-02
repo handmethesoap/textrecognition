@@ -1,5 +1,6 @@
 dictionary_length 64
 dictionary_source_images 6000
+dictionary_train_images 100
 kmeans_attempts 5
 kmeans_iter 1000
 kmeans_eps 0.001
@@ -14,3 +15,6 @@ traindata traindata.txt
 test_file ryoungt_05.08.2002/testtest2.JPG
 %test_file apanar_06.08.2002/IMG_1261.JPG
 test_result_file testoutput.JPG
+min_window_size 32
+max_window_size 32
+window_step_size 2

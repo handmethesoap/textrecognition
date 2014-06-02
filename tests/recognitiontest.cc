@@ -15,13 +15,14 @@ int main( int argc, char** argv )
     //Start timer
     timeval start;
     timeval end;
-    gettimeofday(&start, NUL    if(generatetraindata == "1"){L);
+    gettimeofday(&start, NULL);
     long int operation_time = 0;
     
     //Read in paramterfile
     FileReader read;    
     read.registerIntParameter("dictionary_length");
     read.registerIntParameter("dictionary_source_images");
+    read.registerIntParameter("dictionary_train_images");
     read.registerIntParameter("kmeans_attempts");
     read.registerIntParameter("kmeans_iter");
     read.registerRealParameter("kmeans_eps");
@@ -34,8 +35,10 @@ int main( int argc, char** argv )
     read.registerStringParameter("traindata");
     read.registerStringParameter("test_file");
     read.registerStringParameter("test_result_file");
+    read.registerIntParameter("min_window_size");
+    read.registerIntParameter("max_window_size");
+    read.registerIntParameter("window_step_size");
     CHECK_MSG( read.readFile(parameterfile), "Could not read config file");
-    
     
     //depending on command line parameter generate or read dictionary
    
@@ -48,7 +51,9 @@ int main( int argc, char** argv )
     std::cout << "dictionary loaded, proceeding to text recognition" << std::endl;
     
     recogniser.train();
-   
+    
+    std::cout << "Training complete, proceeding to testing" << std::endl;
+    
     recogniser.test();
 
     //Output operation time
