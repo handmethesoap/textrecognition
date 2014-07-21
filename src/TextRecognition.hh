@@ -41,7 +41,8 @@ public:
 
 private:
 
-  void getTrainImages(std::vector<std::string>& filenames, std::vector<std::vector<cv::Rect*>*>& textboxes);
+  void getNoTextTrainImages(std::vector<std::string>& filenames, std::vector<std::vector<cv::Rect*>*>& textboxes);
+  void getTextTrainImages(std::vector<std::string>& filenames);
   void printIsText(cv::Mat image, std::vector<cv::Rect*> textboxes);
   bool isText( int x, int y, std::vector<cv::Rect*> textboxes);
   void reduceFeatures( cv::Mat1f & featurerepresentation, cv::Mat & reducedfeatures );

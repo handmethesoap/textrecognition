@@ -26,7 +26,8 @@ int main( int argc, char** argv )
     read.registerIntParameter("kmeans_attempts");
     read.registerIntParameter("kmeans_iter");
     read.registerRealParameter("kmeans_eps");
-    read.registerStringParameter("recognition_train_path");
+    read.registerStringParameter("no_text_recognition_train_path");
+    read.registerStringParameter("text_recognition_train_path");
     read.registerStringParameter("recognition_test_path");
     read.registerStringParameter("dictionary_path");
     read.registerStringParameter("dictionary_save_path");
@@ -50,7 +51,7 @@ int main( int argc, char** argv )
 
     std::cout << "dictionary loaded, proceeding to text recognition" << std::endl;
     
-    recogniser.train();
+    recogniser.load();
     
     std::cout << "Training complete, proceeding to testing" << std::endl;
     

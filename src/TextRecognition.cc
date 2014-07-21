@@ -13,7 +13,7 @@ void TextRecognition::train(void){
   int numtextsamples = 0;
   int numnotextsamples = 0;
   
-  std::vector<std::string> filenames;
+  std::vector<std::string> notextfilenames, textfilenames;
   std::vector<std::vector<cv::Rect*>*> textboxes;
   
   cv::SVMParams svmparams;
@@ -21,50 +21,85 @@ void TextRecognition::train(void){
   svmparams.kernel_type = CvSVM::LINEAR;
   svmparams.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
   
-
-  //Read image file names
-  getTrainImages(filenames, textboxes);
+  
+  //Read image file names for text samples
+  getTextTrainImages(textfilenames);
   
   for( int k = 0; k < parameters.getIntParameter("dictionary_train_images"); ++k){
-    cv::Mat1f image = cv::imread(  filenames[k] , cv::IMREAD_GRAYSCALE );
-    if(! image.data ){
-      std::cout << "could not read image " << filenames[k] << std::endl;
-      std::cout << filenames.size() << std::endl;
-    }
-  
-    //extract 32*32 subimages
-    if((numtextsamples < parameters.getIntParameter("numtextsamples")) && (numnotextsamples < parameters.getIntParameter("numnotextsamples"))){
-      for(int i = 0; i < image.size().width - 31; i+=32){
-	for(int j = 0; j < image.size().height -31; j+=32){
-	  
-	  bool datatype = isText(i,j,*textboxes[k]);
-	  
-	  //check if the required number of text and non text samples have been processed
-	  if( (datatype == 1 && numtextsamples < parameters.getIntParameter("numtextsamples")) || (datatype == 0 && numnotextsamples < parameters.getIntParameter("numnotextsamples")) ){
-	    
-	    traindatatype.push_back(datatype);
-	    if(datatype == 1){
+    if(numtextsamples < parameters.getIntParameter("numtextsamples")){
+      cv::Mat1f image = cv::imread(  textfilenames[k] , cv::IMREAD_GRAYSCALE );
+      if(! image.data ){
+	std::cout << "could not read image " << textfilenames[k] << std::endl;
+	std::cout << textfilenames.size() << std::endl;
+      }
+    
+      //extract 32*32 subimages
+      if(numtextsamples < parameters.getIntParameter("numtextsamples")){
+	for(int i = 0; i < image.size().width - 31; i+=32){
+	  for(int j = 0; j < image.size().height -31; j+=32){
+		    
+	    //check if the required number of text and non text samples have been processed
+	    if(numtextsamples < parameters.getIntParameter("numtextsamples") ){
+	      
+	      traindatatype.push_back(1);
+
 	      ++numtextsamples;
+	      std::cout << "numtextsamples = " << numtextsamples << std::endl;
+	      cv::Mat1f subimage = image(cv::Range(j,j+32), cv::Range(i,i+32));
+	      cv::Mat1f reducedfeatures;
+	      computeFeatureRepresentation(subimage, reducedfeatures);
+	      
+	      traindata.push_back(reducedfeatures.reshape(0,1));
+	      
 	    }
-	    else{
-	      ++numnotextsamples;
-	    }
-	    
-	    
-	    
-	    cv::Mat1f subimage = image(cv::Range(j,j+32), cv::Range(i,i+32));
-	    cv::Mat1f reducedfeatures;
-	    computeFeatureRepresentation(subimage, reducedfeatures);
-	    
-	    traindata.push_back(reducedfeatures.reshape(0,1));
-	    
 	  }
 	}
       }
+      std::cout << numtextsamples << ", " << numnotextsamples << std::endl;
     }
-    std::cout << numtextsamples << ", " << numnotextsamples << std::endl;
   }
+
+  //Read image file names for text free samples
+  getNoTextTrainImages(notextfilenames, textboxes);
   
+  for( int k = 0; k < parameters.getIntParameter("dictionary_train_images"); ++k){
+    if(numnotextsamples < parameters.getIntParameter("numnotextsamples")){
+      cv::Mat1f image = cv::imread(  notextfilenames[k] , cv::IMREAD_GRAYSCALE );
+      if(! image.data ){
+	std::cout << "could not read image " << notextfilenames[k] << std::endl;
+	std::cout << notextfilenames.size() << std::endl;
+      }
+    
+      //extract 32*32 subimages
+      if(numnotextsamples < parameters.getIntParameter("numnotextsamples")){
+	for(int i = 0; i < image.size().width - 31; i+=32){
+	  for(int j = 0; j < image.size().height -31; j+=32){
+	    
+	    bool datatype = isText(i,j,*textboxes[k]);
+	    
+	    //check if the required number of text and non text samples have been processed
+	    if( datatype == 0 && numnotextsamples < parameters.getIntParameter("numnotextsamples") ){
+	      
+	      traindatatype.push_back(0);
+	      
+	      ++numnotextsamples;
+	      std::cout << "numnotextsamples = " << numnotextsamples << std::endl;
+	      
+	      cv::Mat1f subimage = image(cv::Range(j,j+32), cv::Range(i,i+32));
+	      cv::Mat1f reducedfeatures;
+	      computeFeatureRepresentation(subimage, reducedfeatures);
+	      
+	      traindata.push_back(reducedfeatures.reshape(0,1));
+	      
+	      
+	    }
+	  }
+	}
+      }
+      std::cout << numtextsamples << ", " << numnotextsamples << std::endl;
+    }
+  }
+   
   //std::cout << parameters.getStringParameter("recognition_train_path") + file << std::endl;
 
   printTrainData(traindata, traindatatype);
@@ -155,7 +190,9 @@ void TextRecognition::test(void){
     results = results.reshape(0,(image.size().height- windowsize)/10+1);
     
     std::cout << results << std::endl;
-
+    cv::imshow( "Display window", results*255);
+    cv::waitKey(0);
+    std::cout << "hih?" << std::endl;
     
 //     for( int j = 0; j < results.rows; ++j ){
 //       for( int i = 0; i < results.cols; ++i ){
@@ -175,16 +212,16 @@ void TextRecognition::test(void){
   }
   
 //   cv::namedWindow( "Display window", cv::WINDOW_AUTOSIZE );
-//   cv::imshow( "Display window", textresult);
+   
 //   cv::waitKey(0);
 //   imwrite(parameters.getStringParameter("test_result_file"), textresult);
 		  
 }
 
-void TextRecognition::getTrainImages(std::vector<std::string>& filenames, std::vector<std::vector<cv::Rect*>*>& textboxes){
+void TextRecognition::getNoTextTrainImages(std::vector<std::string>& filenames, std::vector<std::vector<cv::Rect*>*>& textboxes){
   
   //open text file containing image file data
-  std::string name = parameters.getStringParameter("recognition_train_path") + "locations.xml";
+  std::string name = parameters.getStringParameter("no_text_recognition_train_path") + "locations.xml";
   std::ifstream infile(name.c_str());
   CHECK_MSG(infile.good(),"Error reading '" << name << "'.  Please check file exists and is named correctly");
   int numimages = 0;
@@ -208,7 +245,7 @@ void TextRecognition::getTrainImages(std::vector<std::string>& filenames, std::v
 	file = param.substr(param.find('>')+1);
 	file = file.erase(file.find('<'));
 	
-	filenames.push_back( parameters.getStringParameter("recognition_train_path") + file);
+	filenames.push_back( parameters.getStringParameter("no_text_recognition_train_path") + file);
 	textboxes.push_back( new std::vector<cv::Rect*> );
 		
 	++numimages;
@@ -256,6 +293,38 @@ void TextRecognition::getTrainImages(std::vector<std::string>& filenames, std::v
 	  tt<<line;
 	  tt>>param;
 	}
+      }
+    }
+  }
+}
+
+void TextRecognition::getTextTrainImages(std::vector<std::string>& filenames){
+  
+  //open text file containing image file data
+  std::string name = parameters.getStringParameter("text_recognition_train_path") + "word.xml";
+  std::ifstream infile(name.c_str());
+  CHECK_MSG(infile.good(),"Error reading '" << name << "'.  Please check file exists and is named correctly");
+  int numimages = 0;
+  
+  //Read image file names
+  while (!infile.eof() && numimages < parameters.getIntParameter("dictionary_train_images")){
+    std::string line, param;
+    std::string file;
+    std::stringstream tt;
+    getline(infile,line);
+    tt<<line;
+    while( tt>>param ){
+
+      //get image file name
+      if(param == "<image" ){
+	tt>>param;
+	file = param.substr(param.find('"')+1);
+	file = file.erase(file.find('"'));
+	
+	filenames.push_back( parameters.getStringParameter("text_recognition_train_path") + file);
+		
+	++numimages;
+	
       }
     }
   }
@@ -360,12 +429,21 @@ void TextRecognition::load( void ){
   
   cv::Mat traindata;
   cv::Mat traindatatype;
+  float data[2] = {0.1, 1000};
+  cv::Mat weights = cv::Mat(1, 2, CV_32FC1, data);
+  CvMat weights2 = weights;
+  
   
   cv::SVMParams svmparams;
   svmparams.svm_type    = CvSVM::C_SVC;
   svmparams.kernel_type = CvSVM::LINEAR;
   svmparams.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
+  svmparams.class_weights = &weights2;
   
+  CvScalar scal = cvGet2D(svmparams.class_weights, 0, 0);
+  CvScalar scal2 = cvGet2D(svmparams.class_weights, 0, 1);
+  
+  std::cout << "the weights are: " << std::endl << scal.val[0] << ", " << scal2.val[0] << std::endl;
   std::cout << "loading training data" << std::endl;
   
   readTrainData(traindata, traindatatype);
